@@ -37,7 +37,7 @@ class SwaggerCombine {
 
   load() {
     return $RefParser
-      .dereference(this.config, this.opts)
+      .bundle(this.config, this.opts)
       .then(configSchema => {
         this.apis = configSchema.apis || [];
         this.combinedSchema = _.omit(configSchema, 'apis');
@@ -55,8 +55,8 @@ class SwaggerCombine {
             }
 
             return $RefParser
-              .dereference(api.url, opts)
-              .then(res => SwaggerParser.dereference(res, opts))
+              .bundle(api.url, opts)
+              .then(res => SwaggerParser.bundle(res, opts))
               .catch(err => {
                 if (this.opts.continueOnError) {
                   return;

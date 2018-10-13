@@ -253,6 +253,48 @@ class SwaggerCombine {
 
   renameTags() {
     this.schemas = this.schemas.map((schema, idx) => {
+      if (
+        this.apis[idx].tags &&
+        this.apis[idx].tags.rename &&
+        Object.keys(this.apis[idx].operationIds.rename).length > 0
+      ) {
+        let renamings;
+
+        if (_.isPlainObject(this.apis[idx].tags.rename)) {
+          renamings = [];
+          _.forIn(this.apis[idx].tags.rename, (renameTag, tagToRename) => {
+            renamings.push({
+              type: 'rename',
+              from: tagToRename,
+              to: renameTag,
+            });
+          });
+        } else {
+          renamings = this.apis[idx].tags.rename;
+        }
+
+        _.forEach(renamings, renaming => {
+          const rename = this.rename.bind(this);
+          traverse(schema).forEach(function traverseSchema() {
+            if (this.key === 'tags' && Array.isArray(this.node)) {
+              _.each(this.node, (element) => {
+                const newName = rename(renaming, element);
+                const isRenamed = newName !== element;
+                this.update(_.uniq(this.node.map(tag => (isRenamed ? newName : tag))));
+              });
+            }
+          });
+        });
+      }
+
+      return schema;
+    });
+
+    return this;
+  }
+
+  renameTags_Old() {
+    this.schemas = this.schemas.map((schema, idx) => {
       if (this.apis[idx].tags && this.apis[idx].tags.rename && Object.keys(this.apis[idx].tags.rename).length > 0) {
         _.forIn(this.apis[idx].tags.rename, (newTagName, tagNameToRename) => {
           traverse(schema).forEach(function traverseSchema() {

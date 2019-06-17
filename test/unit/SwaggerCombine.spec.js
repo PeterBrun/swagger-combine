@@ -45,6 +45,9 @@ describe('[Unit] SwaggerCombine.js', () => {
                     in: 'path',
                   },
                 ],
+                'x-policy': [
+                  'test'
+                ],
               },
               post: {
                 summary: 'POST /test/path/first',
@@ -75,6 +78,9 @@ describe('[Unit] SwaggerCombine.js', () => {
               get: {
                 summary: 'GET /test/path/second',
                 tags: ['testTagFirst', 'testTagSecond'],
+                'x-policy': [
+                  'test2'
+                ],
               },
               post: {
                 summary: 'POST /test/path/second',
@@ -272,6 +278,22 @@ describe('[Unit] SwaggerCombine.js', () => {
         expect(instance.schemas[0].paths['/test/path/first']).to.not.have.keys('get');
         expect(Object.keys(instance.schemas[0].paths['/test/path/first'])).to.have.lengthOf(2);
         expect(Object.keys(instance.schemas[0].paths)).to.have.lengthOf(2);
+      });
+    });
+
+    describe('filterPolicy()', () => {
+      it('filters included policies for method in path', () => {
+        instance.apis = [
+          {
+            policy: {
+              include: ['test'],
+            },
+          },
+        ];
+
+        instance.filterPolicy();
+        expect(instance.schemas[0].paths).to.have.all.keys('/test/path/first');
+        expect(instance.schemas[0].paths).to.not.have.keys('/test/path/second');
       });
     });
 

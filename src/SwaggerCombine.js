@@ -19,6 +19,7 @@ class SwaggerCombine {
     return this.load()
       .then(() => this.filterPaths())
       .then(() => this.filterParameters())
+      .then(() => this.filterPolicy())
       .then(() => this.renamePaths())
       .then(() => this.renameTags())
       .then(() => this.addTags())
@@ -142,6 +143,26 @@ class SwaggerCombine {
         }
       }
 
+      return schema;
+    });
+
+    return this;
+  }
+
+  filterPolicy() {
+    this.schemas = this.schemas.map((schema, idx) => {
+      if (this.apis[idx].policy && this.apis[idx].policy) {
+        if (this.apis[idx].policy.include && this.apis[idx].policy.include.length > 0) {
+          _.forIn(schema.paths, (properties, method) => {
+            schema.paths[method] = _.pickBy(schema.paths[method], (m) => {
+              return m['x-policy'] != undefined && m['x-policy'].some(p => _.includes(this.apis[idx].policy.include, p));
+            });
+            if (_.isEmpty(schema.paths[method])) {
+              delete schema.paths[method];
+            }
+          });
+        }
+      }
       return schema;
     });
 
@@ -459,7 +480,7 @@ class SwaggerCombine {
         _.keys(securityDefinitions)
       ).filter(key => !_.isEqual(securityDefinitions[key], this.combinedSchema.securityDefinitions[key]));
 
-      const newOperationIds = traverse(schema).reduce(function(acc, x) {
+      const newOperationIds = traverse(schema).reduce(function (acc, x) {
         if (
           'operationId' === this.key &&
           this.parent &&

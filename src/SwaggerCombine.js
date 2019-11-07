@@ -536,6 +536,19 @@ class SwaggerCombine {
         }
 
         _.defaultsDeep(this.combinedSchema, _.pick(schema, ['definitions']));
+
+        const conflictingComponents = _.intersection(
+          _.keys(_.get(this.combinedSchema, 'components.schemas')),
+          _.keys(_.get(schema, 'components.schemas'))
+        ).filter(
+          key => !_.isEqual(_.get(schema, `components.schemas.${key}`), _.get(this, `combinedSchema.components.schemas.${key}`))
+        );
+
+        if (!_.isEmpty(conflictingComponents)) {
+          throw new Error(`Name conflict in components: ${conflictingComponents.join(', ')}`);
+        }
+
+        _.defaultsDeep(this.combinedSchema, _.pick(schema, ['components']));
       }
     });
 
